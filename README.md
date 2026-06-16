@@ -5,6 +5,14 @@ AI writes the LaTeX, you compile it to PDF with Tectonic and iterate. The AI is
 reached by spawning your locally installed `claude` or `chatgpt` CLI. No API
 keys are stored in the app.
 
+## Download
+
+Grab the latest macOS `.dmg` from the
+[**Releases page**](https://github.com/VishiATChoudhary/open-prism/releases/latest)
+(Apple Silicon `arm64` and Intel `x64` builds). The app is ad-hoc signed, not
+notarized — on first launch, right-click the app and choose **Open** to bypass
+Gatekeeper.
+
 ## Requirements
 
 - Node.js 20+

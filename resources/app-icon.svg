@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="112" y1="80" x2="912" y2="944" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111217"/>
+      <stop offset="0.46" stop-color="#171722"/>
+      <stop offset="1" stop-color="#07080b"/>
+    </linearGradient>
+    <linearGradient id="rainbow" x1="174" y1="742" x2="854" y2="260" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f54267"/>
+      <stop offset="0.16" stop-color="#fa8429"/>
+      <stop offset="0.32" stop-color="#f4d829"/>
+      <stop offset="0.48" stop-color="#2fca68"/>
+      <stop offset="0.64" stop-color="#18bdea"/>
+      <stop offset="0.8" stop-color="#4f70ef"/>
+      <stop offset="1" stop-color="#ad58ef"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="312" y1="230" x2="712" y2="786" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.54"/>
+      <stop offset="0.45" stop-color="#d6f5ff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.36"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="28" stdDeviation="34" flood-color="#000000" flood-opacity="0.42"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="24" flood-color="#18bdea" flood-opacity="0.18"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="5" seed="18" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.16"/>
+      </feComponentTransfer>
+    </filter>
+    <clipPath id="round">
+      <rect x="56" y="56" width="912" height="912" rx="220"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect width="1024" height="1024" fill="url(#bg)"/>
+    <path d="M120 644C270 588 360 554 522 516C688 477 792 430 930 338" fill="none" stroke="#ffffff" stroke-width="36" stroke-linecap="round" opacity="0.22"/>
+    <path d="M120 694C285 626 376 574 522 516C650 465 770 392 930 276" fill="none" stroke="url(#rainbow)" stroke-width="96" stroke-linecap="round" opacity="0.9"/>
+    <path d="M518 174L806 798H218L518 174Z" fill="#11131c" fill-opacity="0.58" stroke="url(#rainbow)" stroke-width="26" stroke-linejoin="round" filter="url(#soft-shadow)"/>
+    <path d="M518 174L806 798H218L518 174Z" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.22" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M518 174V798" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.2"/>
+    <path d="M518 174L628 798" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.16"/>
+    <path d="M218 798L518 174L392 798" fill="#ffffff" opacity="0.045"/>
+    <rect width="1024" height="1024" filter="url(#grain)" opacity="0.72"/>
+  </g>
+</svg>

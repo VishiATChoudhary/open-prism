@@ -1,0 +1,327 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Animatable angle for the spinning rainbow focus ring */
+@property --rainbow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@layer base {
+  :root {
+    /* Light "paper" base — warm near-white with a faint cool cast */
+    --background: 40 33% 97%;
+    --surface: 40 26% 95%;
+    --elevated: 0 0% 100%;
+    --foreground: 232 22% 16%;
+
+    --muted: 40 18% 91%;
+    --muted-foreground: 232 9% 42%;
+
+    --primary: 232 20% 16%;
+    --primary-foreground: 40 33% 98%;
+
+    --accent: 40 18% 90%;
+    --accent-foreground: 232 22% 16%;
+
+    --destructive: 4 74% 52%;
+    --destructive-foreground: 40 30% 98%;
+
+    --border: 232 14% 86%;
+    --input: 232 14% 86%;
+    --ring: 266 84% 60%;
+
+    /* Prism spectral stops — used ONLY on active/loading/focus states */
+    --spectral-1: 266 80% 58%; /* violet */
+    --spectral-2: 224 82% 56%; /* indigo-blue */
+    --spectral-3: 190 84% 44%; /* cyan */
+    --spectral-4: 152 64% 42%; /* mint */
+
+    /* Neutral scrollbar thumb, tuned per mode */
+    --scrollbar: 232 10% 70%;
+    --scrollbar-hover: 232 10% 56%;
+
+    /* PDF preview tray — recessed neutral behind the page canvases */
+    --pdf-bg: 232 12% 88%;
+
+    --radius: 0.625rem;
+  }
+
+  .dark {
+    /* Dark "instrument" base — near-black with a faint cool cast */
+    --background: 232 16% 6%;
+    --surface: 232 15% 8%;
+    --elevated: 230 14% 10%;
+    --foreground: 40 22% 92%;
+
+    --muted: 230 12% 13%;
+    --muted-foreground: 230 8% 56%;
+
+    --primary: 40 24% 92%;
+    --primary-foreground: 232 18% 7%;
+
+    --accent: 230 12% 14%;
+    --accent-foreground: 40 22% 92%;
+
+    --destructive: 4 80% 62%;
+    --destructive-foreground: 40 22% 96%;
+
+    --border: 230 12% 16%;
+    --input: 230 12% 16%;
+    --ring: 266 84% 66%;
+
+    --spectral-1: 266 84% 66%; /* violet */
+    --spectral-2: 224 88% 64%; /* indigo-blue */
+    --spectral-3: 190 90% 58%; /* cyan */
+    --spectral-4: 152 70% 56%; /* mint */
+
+    --scrollbar: 230 10% 22%;
+    --scrollbar-hover: 230 10% 32%;
+
+    --pdf-bg: 232 16% 4%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Instrument Sans', system-ui, sans-serif;
+    font-feature-settings: 'cv01', 'cv03', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+  }
+
+  /* Faint vignette + spectral aura anchored top-left, behind everything */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 90% at 0% 0%, hsl(var(--spectral-1) / 0.1), transparent 45%),
+      radial-gradient(120% 90% at 100% 0%, hsl(var(--spectral-3) / 0.06), transparent 50%),
+      radial-gradient(140% 120% at 50% 120%, hsl(var(--spectral-2) / 0.07), transparent 55%);
+  }
+
+  /* Film grain overlay (~3%) */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  ::selection {
+    background: hsl(var(--spectral-1) / 0.32);
+    color: hsl(var(--foreground));
+  }
+
+  /* Thin, dark scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--scrollbar));
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--scrollbar-hover));
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  .pdf-page-frame {
+    background: white;
+  }
+
+  .textLayer {
+    position: absolute;
+    inset: 0;
+    overflow: clip;
+    line-height: 1;
+    text-align: initial;
+    text-size-adjust: none;
+    forced-color-adjust: none;
+    transform-origin: 0 0;
+  }
+
+  .textLayer :is(span, br) {
+    position: absolute;
+    color: transparent;
+    white-space: pre;
+    cursor: text;
+    transform-origin: 0 0;
+  }
+
+  .textLayer > :not(.markedContent),
+  .textLayer .markedContent span:not(.markedContent) {
+    z-index: 1;
+  }
+
+  .textLayer span.markedContent {
+    top: 0;
+    height: 0;
+  }
+
+  .textLayer span[role='img'] {
+    user-select: none;
+    cursor: default;
+  }
+
+  /* Keep selected glyphs transparent so only the highlight box shows over the
+     crisp canvas — otherwise the overlay text becomes visible and doubles up,
+     looking blurry. */
+  .textLayer ::selection,
+  .textLayer span::selection {
+    background: hsl(var(--spectral-3) / 0.3);
+    color: transparent;
+  }
+
+  /* Text painted with the moving full-spectrum rainbow — a prism's dispersion */
+  .text-spectral {
+    background: linear-gradient(
+      100deg,
+      hsl(350 95% 62%),
+      hsl(28 96% 56%),
+      hsl(46 96% 54%),
+      hsl(140 72% 46%),
+      hsl(190 90% 50%),
+      hsl(224 88% 62%),
+      hsl(280 84% 64%),
+      hsl(350 95% 62%)
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: spectral-pan 6s linear infinite;
+  }
+
+  /* Heavier film grain — layered over the home screen for texture */
+  .grain-tex {
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 170px 170px;
+  }
+
+  /* Hairline spectral border via gradient mask */
+  .ring-spectral {
+    box-shadow:
+      0 0 0 1px hsl(var(--spectral-1) / 0.35),
+      0 0 24px -6px hsl(var(--spectral-1) / 0.45);
+  }
+
+  .glass {
+    background: hsl(var(--elevated) / 0.72);
+    backdrop-filter: blur(14px) saturate(120%);
+  }
+
+  /* Wrapper that paints a spinning full-spectrum ring around its child on focus */
+  .rainbow-focus {
+    position: relative;
+    border-radius: 0.75rem; /* matches rounded-xl child */
+  }
+  .rainbow-focus > * {
+    position: relative;
+    z-index: 1;
+  }
+  .rainbow-focus::before,
+  .rainbow-focus::after {
+    content: '';
+    position: absolute;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    background: conic-gradient(
+      from var(--rainbow-angle),
+      hsl(350 95% 62%),
+      hsl(28 96% 56%),
+      hsl(46 96% 54%),
+      hsl(140 72% 46%),
+      hsl(190 90% 50%),
+      hsl(224 88% 62%),
+      hsl(280 84% 64%),
+      hsl(350 95% 62%)
+    );
+  }
+  /* crisp edge */
+  .rainbow-focus::before {
+    inset: -1.5px;
+    z-index: 0;
+  }
+  /* soft outer glow */
+  .rainbow-focus::after {
+    inset: -5px;
+    z-index: -1;
+    filter: blur(9px);
+  }
+  .rainbow-focus:focus-within::before {
+    opacity: 1;
+    animation: rainbow-spin 3s linear infinite;
+  }
+  .rainbow-focus:focus-within::after {
+    opacity: 0.55;
+    animation: rainbow-spin 3s linear infinite;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Spectral', Georgia, serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+}
+
+@keyframes rainbow-spin {
+  to {
+    --rainbow-angle: 360deg;
+  }
+}
+
+/* Respect reduced-motion everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .text-spectral {
+    animation: none;
+  }
+}

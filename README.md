@@ -24,6 +24,10 @@
   <img alt="Open Prism home screen" src="home.png" />
 </p>
 
+<p align="center">
+  <img alt="Open Prism editor view" src="editor.png" />
+</p>
+
 ## What It Is
 
 Open Prism is a desktop LaTeX environment built around the **Claude CLI**.

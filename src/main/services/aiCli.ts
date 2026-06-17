@@ -45,7 +45,7 @@ export async function runAiCli(
     args = ['-p']
     if (model) args.push('--model', model)
   } else {
-    // chatgpt → OpenAI Codex CLI, non-interactive. Reads the prompt from stdin
+    // OpenAI Codex CLI, non-interactive. Reads the prompt from stdin
     // (`-`), no ANSI codes so latex extraction stays clean, read-only sandbox
     // since we only want text back, no persisted session files.
     bin = 'codex'

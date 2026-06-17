@@ -1,4 +1,4 @@
-export type Provider = 'claude' | 'chatgpt'
+export type Provider = 'claude' | 'codex'
 
 export interface Settings {
   provider: Provider

@@ -8,7 +8,7 @@ Status: Approved (pending spec review)
 Open-source desktop clone of ChatGPT's "Prism": describe a document in chat, an
 AI writes/edits LaTeX, the user compiles to PDF and iterates. The app is a local
 Electron desktop application. AI is reached by spawning a locally installed CLI
-(`claude` or `chatgpt`) — no API keys stored in the app. LaTeX is compiled with
+(`claude` or `codex`) — no API keys stored in the app. LaTeX is compiled with
 Tectonic. UI is minimalist, built from shadcn/ui components.
 
 ## Goals
@@ -44,7 +44,7 @@ Three Electron layers, strict separation:
   - `project:new`, `project:open`, `project:save`
   - `file:read`, `file:write`
   - `compile` — spawn Tectonic, return PDF path or error log
-  - `ai:chat` — spawn `claude`/`chatgpt` CLI, stream stdout back to renderer
+  - `ai:chat` — spawn `claude`/`codex` CLI, stream stdout back to renderer
   - `settings:get`, `settings:set`
 - **Preload** — `contextBridge` exposes a typed `window.api.*` surface. Security:
   `contextIsolation: true`, `nodeIntegration: false`, `sandbox` where feasible.
@@ -85,7 +85,7 @@ shadcn components used: `Resizable` (panels), `Button`, `Textarea`, `Input`,
 1. User types a message in the chat input.
 2. Renderer builds the prompt: system instructions + current `.tex` + user message
    + recent chat history.
-3. Main spawns the configured CLI (`claude -p ...` or `chatgpt ...`) and streams
+3. Main spawns the configured CLI (`claude -p ...` or `codex exec ...`) and streams
    stdout back to the chat bubble.
 4. On completion, the renderer extracts the first fenced ```latex block from the
    reply and **directly replaces** the editor content (undo available; manual
@@ -111,7 +111,7 @@ MyDoc/
 
 ## Settings
 
-- Provider: `claude` | `chatgpt` (which CLI binary to spawn).
+- Provider: `claude` | `codex` (which CLI binary to spawn).
 - Model: free-text/passed-through flag (optional).
 - Persisted per-project in `.prism.json`; a global default lives in Electron
   `userData`.

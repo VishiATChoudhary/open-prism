@@ -2,7 +2,11 @@ import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/state/useProject'
 
-export function EditorTabs() {
+interface EditorTabsProps {
+  className?: string
+}
+
+export function EditorTabs({ className }: EditorTabsProps) {
   const openFiles = useProject((s) => s.openFiles)
   const activePath = useProject((s) => s.activePath)
   const activateTab = useProject((s) => s.activateTab)
@@ -11,7 +15,7 @@ export function EditorTabs() {
   if (openFiles.length === 0) return null
 
   return (
-    <div className="flex items-stretch overflow-x-auto border-b border-border/60 bg-surface/40">
+    <div className={cn('flex min-w-0 flex-1 items-stretch overflow-x-auto', className)}>
       {openFiles.map((f) => {
         const active = f.path === activePath
         return (

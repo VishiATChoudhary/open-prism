@@ -25,12 +25,7 @@ export default function App() {
 
   useEffect(() => {
     if (!window.api) return
-    void window.api.getSettings().then((s) => {
-      // codex/chatgpt is disabled for now — always fall back to Claude.
-      const next = s.provider === 'claude' ? s : { ...s, provider: 'claude' as const }
-      setSettings(next)
-      if (next !== s) void window.api.setSettings(next)
-    })
+    void window.api.getSettings().then((s) => setSettings(s))
   }, [setSettings])
 
   useEffect(() => {

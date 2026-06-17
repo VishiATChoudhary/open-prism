@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a local Electron desktop app where an AI (spawned `claude`/`chatgpt` CLI) writes and edits LaTeX in a source editor, the user compiles to PDF with Tectonic, and the PDF renders in a side-by-side viewer.
+**Goal:** Build a local Electron desktop app where an AI (spawned `claude`/`codex` CLI) writes and edits LaTeX in a source editor, the user compiles to PDF with Tectonic, and the PDF renders in a side-by-side viewer.
 
 **Architecture:** Electron with three layers — Main (Node: filesystem + child processes via IPC), Preload (`contextBridge` typed `window.api`), Renderer (React + shadcn UI). Pure logic (prompt builder, LaTeX extractor, Tectonic log parsing) lives in `shared/` and is unit-tested with Vitest. Electron/UI glue is built then manually smoke-tested.
 
@@ -33,7 +33,7 @@ open-prism/
         settings.ts            # settings:get/set
       services/
         tectonic.ts            # spawn tectonic, return pdf path or log
-        aiCli.ts               # spawn claude/chatgpt, stream stdout
+        aiCli.ts               # spawn claude/codex, stream stdout
         projectStore.ts        # read/write .prism.json + scaffold
         appSettings.ts         # global defaults in userData
     preload/
@@ -322,7 +322,7 @@ git commit -m "feat: scaffold electron-vite + react + ts project"
 - [ ] **Step 1: Create `src/shared/types.ts`**
 
 ```ts
-export type Provider = 'claude' | 'chatgpt'
+export type Provider = 'claude' | 'codex'
 
 export interface Settings {
   provider: Provider
@@ -716,7 +716,7 @@ import type { Provider } from '../../shared/types'
  * chunks to onChunk. Resolves with the full assistant text on success.
  *
  * claude:  `claude -p` reads the prompt from stdin and prints the reply.
- * chatgpt: `chatgpt` reads the prompt from stdin and prints the reply.
+ * codex: `codex exec` reads the prompt from stdin and prints the reply.
  */
 export function runAiCli(
   provider: Provider,
@@ -726,7 +726,7 @@ export function runAiCli(
 ): Promise<string> {
   const args = provider === 'claude' ? ['-p'] : []
   if (model) args.push('--model', model)
-  const bin = provider === 'claude' ? 'claude' : 'chatgpt'
+  const bin = provider === 'claude' ? 'claude' : 'codex'
 
   return new Promise<string>((resolve, reject) => {
     const proc = spawn(bin, args, { stdio: ['pipe', 'pipe', 'pipe'] })
@@ -1853,7 +1853,7 @@ export function SettingsDialog() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="claude">claude</SelectItem>
-                <SelectItem value="chatgpt">chatgpt</SelectItem>
+                <SelectItem value="codex">codex</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -2099,14 +2099,14 @@ git commit -m "feat: wire app shell layout, shortcuts, settings load"
 
 Open-source desktop clone of ChatGPT's "Prism": describe a document in chat, an
 AI writes the LaTeX, you compile it to PDF with Tectonic and iterate. The AI is
-reached by spawning your locally installed `claude` or `chatgpt` CLI — no API
+reached by spawning your locally installed `claude` or `codex` CLI — no API
 keys are stored in the app.
 
 ## Requirements
 
 - Node.js 20+
 - [Tectonic](https://tectonic-typesetting.github.io) on your `PATH`
-- A `claude` and/or `chatgpt` CLI installed and authenticated on your `PATH`
+- A `claude` and/or `codex` CLI installed and authenticated on your `PATH`
 
 ## Develop
 

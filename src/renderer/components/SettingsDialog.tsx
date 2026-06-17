@@ -44,9 +44,7 @@ export function SettingsDialog() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="claude">Claude (claude CLI)</SelectItem>
-                <SelectItem value="chatgpt" disabled>
-                  ChatGPT — coming soon
-                </SelectItem>
+                <SelectItem value="codex">Codex (codex CLI)</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -17,7 +17,7 @@ hand-built CSS / SVG / canvas.
 - Visuals: pure code (CSS gradients, noise, animated SVG). No binary image assets.
 - Reasoning log depth: **plain stream only**. Keep `claude -p`. Surface the raw
   streamed stdout tokens as a live "thinking" log under the loader. No switch to
-  `stream-json`; works for both `claude` and `chatgpt` providers. No changes to
+  `stream-json`; works for both `claude` and `codex` providers. No changes to
   `main/services/aiCli.ts` or `main/ipc/ai.ts`.
 
 ## Aesthetic Direction

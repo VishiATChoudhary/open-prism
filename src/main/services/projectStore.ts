@@ -10,6 +10,7 @@ import type {
   OpenProjectResult,
   Settings
 } from '../../shared/types'
+import { normalizeSettings } from '../../shared/settings'
 
 const META_FILE = '.prism.json'
 const ROOT_DIR = '.openprism'
@@ -21,7 +22,14 @@ Hello from Open Prism.
 `
 
 function defaultMeta(settings: Settings): ProjectMeta {
-  return { entry: 'main.tex', settings, chatHistory: [] }
+  return { entry: 'main.tex', settings: normalizeSettings(settings), chatHistory: [] }
+}
+
+function normalizeProjectMeta(meta: ProjectMeta, fallbackSettings: Settings): ProjectMeta {
+  return {
+    ...meta,
+    settings: normalizeSettings(meta.settings, fallbackSettings)
+  }
 }
 
 function runCommand(bin: string, args: string[]): Promise<string> {
@@ -156,7 +164,11 @@ async function uniqueProjectDir(name: string): Promise<string> {
 
 async function readMeta(dir: string, settings: Settings): Promise<ProjectMeta> {
   try {
-    return { ...defaultMeta(settings), ...JSON.parse(await fs.readFile(join(dir, META_FILE), 'utf8')) }
+    const meta = {
+      ...defaultMeta(settings),
+      ...JSON.parse(await fs.readFile(join(dir, META_FILE), 'utf8'))
+    }
+    return normalizeProjectMeta(meta, settings)
   } catch {
     return defaultMeta(settings)
   }
@@ -315,12 +327,12 @@ export async function openProject(dir: string, settings: Settings): Promise<Open
 
 export async function saveProject(dir: string, meta: ProjectMeta, source: string): Promise<void> {
   await fs.writeFile(join(dir, meta.entry), source, 'utf8')
-  await fs.writeFile(join(dir, META_FILE), JSON.stringify(meta, null, 2), 'utf8')
+  await fs.writeFile(join(dir, META_FILE), JSON.stringify(normalizeProjectMeta(meta, meta.settings), null, 2), 'utf8')
 }
 
 /** Persist project metadata (entry, settings, chat) without touching file content. */
 export async function saveMeta(dir: string, meta: ProjectMeta): Promise<void> {
-  await fs.writeFile(join(dir, META_FILE), JSON.stringify(meta, null, 2), 'utf8')
+  await fs.writeFile(join(dir, META_FILE), JSON.stringify(normalizeProjectMeta(meta, meta.settings), null, 2), 'utf8')
 }
 
 export async function renameProjectEntry(

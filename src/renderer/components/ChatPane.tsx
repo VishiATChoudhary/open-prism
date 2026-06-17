@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const PROVIDERS: { value: Provider; label: string; cli: string; disabled?: boolean }[] = [
   { value: 'claude', label: 'Claude', cli: 'claude CLI' },
-  { value: 'chatgpt', label: 'ChatGPT', cli: 'coming soon', disabled: true }
+  { value: 'codex', label: 'Codex', cli: 'codex CLI' }
 ]
 
 export function ChatPane() {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Check, FilePlus, Home, Loader2, PanelLeft, Pencil, Play, Save, X } from 'lucide-react'
+import { Check, Download, FilePlus, Home, Loader2, PanelLeft, Pencil, Play, Save, X } from 'lucide-react'
 import { useProject } from '@/state/useProject'
 import { useFiles } from '@/state/useFiles'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ onHome }: TopBarProps) {
-  const { dir, meta, settings, chat, compiling } = useProject()
+  const { dir, meta, settings, chat, compiling, pdfPath } = useProject()
   const loadProject = useProject((s) => s.loadProject)
   const setDir = useProject((s) => s.setDir)
   const toggleSidebar = useProject((s) => s.toggleSidebar)
@@ -24,6 +24,7 @@ export function TopBar({ onHome }: TopBarProps) {
   const [editing, setEditing] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
   const [renaming, setRenaming] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   function startRename() {
     if (!dir) return
@@ -68,6 +69,23 @@ export function TopBar({ onHome }: TopBarProps) {
     if (!result) return
     if (result.ok) toast.success('Compiled.')
     else toast.error(result.summary)
+  }
+
+  async function exportPdf() {
+    if (!pdfPath) {
+      toast.info('Compile the project before exporting a PDF.')
+      return
+    }
+
+    setExporting(true)
+    try {
+      const targetPath = await window.api.exportPdf(pdfPath)
+      toast.success(`Saved PDF to ${targetPath}`)
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
@@ -150,6 +168,20 @@ export function TopBar({ onHome }: TopBarProps) {
         </Button>
         <Button variant="ghost" size="sm" onClick={() => void save()} disabled={!dir}>
           <Save className="h-3.5 w-3.5" /> Save
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void exportPdf()}
+          disabled={!pdfPath || exporting}
+          title={pdfPath ? 'Export PDF to Downloads' : 'Compile before exporting'}
+        >
+          {exporting ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Download className="h-3.5 w-3.5" />
+          )}
+          Export PDF
         </Button>
         <Button
           size="sm"

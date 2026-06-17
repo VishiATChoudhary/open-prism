@@ -39,6 +39,7 @@ const api = {
   readBinaryFile: (path: string): Promise<Uint8Array> => ipcRenderer.invoke('file:readBinary', path),
   writeFile: (path: string, data: string): Promise<void> =>
     ipcRenderer.invoke('file:write', path, data),
+  exportPdf: (pdfPath: string): Promise<string> => ipcRenderer.invoke('file:exportPdf', pdfPath),
   droppedFilePath: (file: File): string => webUtils.getPathForFile(file),
 
   fileTree: (dir: string): Promise<FileNode[]> => ipcRenderer.invoke('file:tree', dir),

@@ -5,7 +5,7 @@
 <h1 align="center">Open Prism</h1>
 
 <p align="center">
-  A LaTeX workspace powered by your local <strong>Claude CLI</strong> — describe a document in plain language and watch Claude write, compile, and fix the LaTeX for you.
+  A LaTeX workspace powered by your local coding-agent CLI — describe a document in plain language and watch Claude, Codex, or Opencode write, compile, and fix the LaTeX for you.
 </p>
 
 <p align="center">
@@ -45,14 +45,14 @@ Why drive Claude through its CLI:
 - **Local and private.** The model is reached by spawning a local process on
   your `PATH` — nothing is proxied through a third-party server.
 
-`codex` is also supported as an alternative provider, but Claude is the
-first-class path.
+Claude, Codex, and Opencode are all supported; pick one in Settings.
 
 ## Highlights
 
-| Draft with Claude | Compile | Iterate | Export |
-| --- | --- | --- | --- |
-| Chat in plain language; your local Claude CLI returns editable LaTeX. | Compile with Tectonic from inside the app. | Show Claude the errors, let it repair them, keep editing. | Save the latest compiled PDF directly to `~/Downloads`. |
+- **Draft with Claude** — chat in plain language; your local Claude CLI returns editable LaTeX.
+- **Compile** — compile with Tectonic from inside the app.
+- **Iterate** — show Claude the errors, let it repair them, keep editing.
+- **Export** — save the latest compiled PDF directly to `~/Downloads`.
 
 ## Download
 
@@ -65,7 +65,7 @@ launch, macOS may require you to right-click the app and choose **Open**.
 ## Requirements
 
 - macOS for the packaged desktop app
-- The [`claude` CLI](https://docs.claude.com/en/docs/claude-code) installed, authenticated, and on your `PATH` (or `codex` as an alternative)
+- The [`claude` CLI](https://docs.claude.com/en/docs/claude-code) installed, authenticated, and on your `PATH` (or `codex` / `opencode` as alternatives)
 - [Tectonic](https://tectonic-typesetting.github.io) available on your `PATH`
 - Node.js 20+ if you are developing locally
 

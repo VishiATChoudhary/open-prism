@@ -40,18 +40,32 @@ export async function runAiCli(
 ): Promise<string> {
   let bin: string
   let args: string[]
-  if (provider === 'claude') {
-    bin = 'claude'
-    args = ['-p']
-    if (model) args.push('--model', model)
-  } else {
-    // OpenAI Codex CLI, non-interactive. Reads the prompt from stdin
-    // (`-`), no ANSI codes so latex extraction stays clean, read-only sandbox
-    // since we only want text back, no persisted session files.
-    bin = 'codex'
-    args = ['exec', '--color', 'never', '--skip-git-repo-check', '-s', 'read-only', '--ephemeral']
-    if (model) args.push('-m', model)
-    args.push('-')
+  let stdinPayload: string | null
+  switch (provider) {
+    case 'claude':
+      bin = 'claude'
+      args = ['-p']
+      if (model) args.push('--model', model)
+      stdinPayload = prompt
+      break
+    case 'codex':
+      // OpenAI Codex CLI, non-interactive. Reads the prompt from stdin
+      // (`-`), no ANSI codes so latex extraction stays clean, read-only sandbox
+      // since we only want text back, no persisted session files.
+      bin = 'codex'
+      args = ['exec', '--color', 'never', '--skip-git-repo-check', '-s', 'read-only', '--ephemeral']
+      if (model) args.push('-m', model)
+      args.push('-')
+      stdinPayload = prompt
+      break
+    default: {
+      // opencode — prompt is a positional arg, not stdin.
+      bin = 'opencode'
+      args = ['run', prompt]
+      if (model) args.push('-m', model)
+      stdinPayload = null
+      break
+    }
   }
 
   const env = await resolveSpawnEnv()
@@ -83,7 +97,9 @@ export async function runAiCli(
       else reject(new Error(err || `"${bin}" exited with code ${code}`))
     })
 
-    proc.stdin.write(prompt)
+    if (stdinPayload !== null) {
+      proc.stdin.write(stdinPayload)
+    }
     proc.stdin.end()
   })
 }

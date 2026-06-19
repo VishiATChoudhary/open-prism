@@ -4,6 +4,7 @@ export const DEFAULT_SETTINGS: Settings = { provider: 'claude', model: '' }
 
 export function normalizeProvider(provider: unknown): Provider {
   if (provider === 'codex' || provider === 'chatgpt') return 'codex'
+  if (provider === 'opencode') return 'opencode'
   return 'claude'
 }
 

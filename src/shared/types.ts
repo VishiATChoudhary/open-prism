@@ -1,4 +1,4 @@
-export type Provider = 'claude' | 'codex'
+export type Provider = 'claude' | 'codex' | 'opencode'
 
 export interface Settings {
   provider: Provider

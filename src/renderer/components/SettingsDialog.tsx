@@ -45,6 +45,7 @@ export function SettingsDialog() {
               <SelectContent>
                 <SelectItem value="claude">Claude (claude CLI)</SelectItem>
                 <SelectItem value="codex">Codex (codex CLI)</SelectItem>
+                <SelectItem value="opencode">Opencode (opencode CLI)</SelectItem>
               </SelectContent>
             </Select>
           </div>

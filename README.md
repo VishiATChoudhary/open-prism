@@ -50,9 +50,10 @@ first-class path.
 
 ## Highlights
 
-| Draft with Claude | Compile | Iterate | Export |
-| --- | --- | --- | --- |
-| Chat in plain language; your local Claude CLI returns editable LaTeX. | Compile with Tectonic from inside the app. | Show Claude the errors, let it repair them, keep editing. | Save the latest compiled PDF directly to `~/Downloads`. |
+- **Draft with Claude** — chat in plain language; your local Claude CLI returns editable LaTeX.
+- **Compile** — compile with Tectonic from inside the app.
+- **Iterate** — show Claude the errors, let it repair them, keep editing.
+- **Export** — save the latest compiled PDF directly to `~/Downloads`.
 
 ## Download
 

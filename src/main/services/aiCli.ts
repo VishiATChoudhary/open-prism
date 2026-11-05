@@ -1,4 +1,5 @@
-import { spawn } from 'child_process'
+import spawn from 'cross-spawn'
+import type { ChildProcessWithoutNullStreams } from 'child_process'
 import type { Provider } from '../../shared/types'
 import { resolveSpawnEnv } from './spawnEnv'
 
@@ -57,7 +58,10 @@ export async function runAiCli(
   const env = await resolveSpawnEnv()
 
   return new Promise<string>((resolve, reject) => {
-    const proc = spawn(bin, args, { stdio: ['pipe', 'pipe', 'pipe'], env })
+    const proc = spawn(bin, args, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env
+    }) as ChildProcessWithoutNullStreams
     let out = ''
     let err = ''
 
@@ -74,7 +78,13 @@ export async function runAiCli(
     })
 
     proc.on('error', (e) =>
-      reject(new Error(`Failed to start "${bin}": ${e.message}. Is the CLI installed and on PATH?`))
+      reject(
+        new Error(
+          `Failed to start "${bin}": ${e.message}. Install it and ensure it is on PATH. ` +
+            'Claude: https://docs.claude.com/en/docs/claude-code — ' +
+            'Codex: https://developers.openai.com/codex/cli'
+        )
+      )
     )
     proc.on('close', (code) => {
       // Prefer stdout (the clean final message); fall back to stderr if a CLI

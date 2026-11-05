@@ -1,4 +1,5 @@
-import { spawn } from 'child_process'
+import spawn from 'cross-spawn'
+import type { ChildProcessWithoutNullStreams } from 'child_process'
 import { join, basename } from 'path'
 import { promises as fs } from 'fs'
 import type { CompileResult } from '../../shared/types'
@@ -20,7 +21,7 @@ export async function compile(projectDir: string, entry: string): Promise<Compil
     const proc = spawn('tectonic', ['--outdir', buildDir, '--keep-logs', entryPath], {
       cwd: projectDir,
       env
-    })
+    }) as ChildProcessWithoutNullStreams
     let settled = false
     let log = ''
 
@@ -37,7 +38,9 @@ export async function compile(projectDir: string, entry: string): Promise<Compil
       settle({
         ok: false,
         log: `Failed to start tectonic: ${err.message}`,
-        summary: 'Tectonic not found. Install it: https://tectonic-typesetting.github.io'
+        summary:
+          'Tectonic not found. Install it with Scoop, Chocolatey, or cargo, ' +
+          'or see https://tectonic-typesetting.github.io'
       })
     })
 

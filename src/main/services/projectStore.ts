@@ -1,7 +1,8 @@
-import { spawn } from 'child_process'
 import { homedir, tmpdir } from 'os'
-import { basename, extname, join, posix, relative, sep } from 'path'
+import { basename, extname, join, relative, sep } from 'path'
 import { promises as fs } from 'fs'
+import { extractZip } from './zip'
+import { assertWindowsSafeName, normalizeProjectEntry, toPosixRelative } from './projectPaths'
 import type {
   ProjectHome,
   ProjectMeta,
@@ -28,24 +29,9 @@ function defaultMeta(settings: Settings): ProjectMeta {
 function normalizeProjectMeta(meta: ProjectMeta, fallbackSettings: Settings): ProjectMeta {
   return {
     ...meta,
+    entry: normalizeProjectEntry(meta.entry),
     settings: normalizeSettings(meta.settings, fallbackSettings)
   }
-}
-
-function runCommand(bin: string, args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(bin, args, { stdio: ['ignore', 'pipe', 'pipe'] })
-    let out = ''
-    let err = ''
-
-    proc.stdout.on('data', (d) => (out += d.toString()))
-    proc.stderr.on('data', (d) => (err += d.toString()))
-    proc.on('error', (error) => reject(new Error(`Failed to start "${bin}": ${error.message}`)))
-    proc.on('close', (code) => {
-      if (code === 0) resolve(out)
-      else reject(new Error(err.trim() || `"${bin}" exited with code ${code}`))
-    })
-  })
 }
 
 export function openPrismRoot(): string {
@@ -59,13 +45,15 @@ export async function ensureOpenPrismRoot(): Promise<string> {
 }
 
 function slugifyProjectName(name: string): string {
-  return (
+  const base =
     name
       .trim()
       .replace(/[^\w .-]/g, '')
       .replace(/\s+/g, '-')
+      .replace(/[.\s]+$/g, '')
       .replace(/^-+|-+$/g, '') || 'untitled'
-  )
+  assertWindowsSafeName(base)
+  return base
 }
 
 function normalizeEntryName(name: string): string {
@@ -78,32 +66,16 @@ function normalizeEntryName(name: string): string {
   const cleaned = trimmed
     .replace(/[^\w .-]/g, '')
     .replace(/\s+/g, '-')
+    .replace(/[.\s]+$/g, '')
     .replace(/^-+|-+$/g, '')
   if (!cleaned || cleaned === '.' || cleaned === '..') throw new Error('File name is invalid.')
+  assertWindowsSafeName(cleaned)
   return cleaned.endsWith('.tex') ? cleaned : `${cleaned}.tex`
 }
 
 function zipProjectName(zipPath: string): string {
   const name = basename(zipPath)
   return extname(name).toLowerCase() === '.zip' ? name.slice(0, -4) : name
-}
-
-export function validateZipEntries(entries: string[]): void {
-  for (const entry of entries) {
-    const trimmed = entry.trim()
-    if (!trimmed) continue
-    if (
-      trimmed.startsWith('/') ||
-      trimmed.includes('\\') ||
-      /^[A-Za-z]:/.test(trimmed) ||
-      trimmed.split('/').includes('..') ||
-      posix.normalize(trimmed).startsWith('../') ||
-      posix.normalize(trimmed) === '..' ||
-      posix.normalize(trimmed).includes('/../')
-    ) {
-      throw new Error('Zip archive contains unsafe paths.')
-    }
-  }
 }
 
 async function visibleDirEntries(dir: string): Promise<string[]> {
@@ -136,7 +108,7 @@ async function findTexEntry(dir: string, root = dir): Promise<string | null> {
     if (name === '__MACOSX' || name === '.DS_Store' || name === 'build' || name === '.git') continue
     const path = join(dir, name)
     const stat = await fs.stat(path)
-    if (stat.isFile() && name.endsWith('.tex')) return relative(root, path)
+    if (stat.isFile() && name.endsWith('.tex')) return toPosixRelative(root, path)
     if (stat.isDirectory()) {
       const nested = await findTexEntry(path, root)
       if (nested) return nested
@@ -238,16 +210,11 @@ export async function importProjectZip(
   zipPath: string,
   settings: Settings
 ): Promise<OpenProjectResult> {
-  const entries = (await runCommand('unzip', ['-Z', '-1', zipPath]))
-    .split(/\r?\n/)
-    .filter(Boolean)
-  validateZipEntries(entries)
-
   const tempDir = await fs.mkdtemp(join(tmpdir(), 'open-prism-import-'))
   let targetDir: string | null = null
 
   try {
-    await runCommand('unzip', ['-q', zipPath, '-d', tempDir])
+    await extractZip(zipPath, tempDir)
     const sourceRoot = await importRootForExtractedDir(tempDir)
     targetDir = await uniqueProjectDir(basename(sourceRoot) === basename(tempDir) ? zipProjectName(zipPath) : basename(sourceRoot))
 

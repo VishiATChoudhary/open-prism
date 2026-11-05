@@ -46,6 +46,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cross-spawn": "^7.0.6",
+    "fflate": "^0.8.3",
     "framer-motion": "^12.40.0",
     "lucide-react": "^0.451.0",
     "pdfjs-dist": "^4.6.0",

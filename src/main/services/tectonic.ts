@@ -1,9 +1,10 @@
-import { spawn } from 'child_process'
+import spawn from 'cross-spawn'
+import type { ChildProcessWithoutNullStreams } from 'child_process'
 import { join, basename } from 'path'
 import { promises as fs } from 'fs'
 import type { CompileResult } from '../../shared/types'
 import { summarizeTectonicLog } from '../../shared/tectonicLog'
-import { resolveSpawnEnv } from './spawnEnv'
+import { resolveExecutable, resolveSpawnEnv } from './spawnEnv'
 
 /**
  * Compiles an entry .tex with Tectonic into <projectDir>/build. The entry and
@@ -11,16 +12,32 @@ import { resolveSpawnEnv } from './spawnEnv'
  * persist unsaved editor buffers before invoking this.
  */
 export async function compile(projectDir: string, entry: string): Promise<CompileResult> {
+  const env = await resolveSpawnEnv()
+  // Resolve against PATH ourselves so a project-local tectonic executable
+  // cannot shadow the real one when compiling untrusted projects. Fail closed:
+  // never hand cross-spawn a bare name that it could resolve from the cwd.
+  const executable = resolveExecutable('tectonic', env)
+  if (!executable) {
+    return {
+      ok: false,
+      log: 'Tectonic was not found on PATH.',
+      summary:
+        'Tectonic not found. Install it and ensure it is on PATH: ' +
+        'https://tectonic-typesetting.github.io'
+    }
+  }
+
   const entryPath = join(projectDir, entry)
   const buildDir = join(projectDir, 'build')
   await fs.mkdir(buildDir, { recursive: true })
-  const env = await resolveSpawnEnv()
 
   return new Promise<CompileResult>((resolve) => {
-    const proc = spawn('tectonic', ['--outdir', buildDir, '--keep-logs', entryPath], {
+    const proc = spawn(executable, ['--outdir', buildDir, '--keep-logs', entryPath], {
       cwd: projectDir,
-      env
-    })
+      env,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      windowsHide: true
+    }) as ChildProcessWithoutNullStreams
     let settled = false
     let log = ''
 
@@ -37,7 +54,9 @@ export async function compile(projectDir: string, entry: string): Promise<Compil
       settle({
         ok: false,
         log: `Failed to start tectonic: ${err.message}`,
-        summary: 'Tectonic not found. Install it: https://tectonic-typesetting.github.io'
+        summary:
+          'Tectonic not found. Install it and ensure it is on PATH: ' +
+          'https://tectonic-typesetting.github.io'
       })
     })
 

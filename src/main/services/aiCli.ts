@@ -1,6 +1,7 @@
-import { spawn } from 'child_process'
+import spawn from 'cross-spawn'
+import type { ChildProcessWithoutNullStreams } from 'child_process'
 import type { Provider } from '../../shared/types'
-import { resolveSpawnEnv } from './spawnEnv'
+import { resolveExecutable, resolveSpawnEnv } from './spawnEnv'
 
 const NODE_CIRCULAR_WARNING_RE =
   /^\(node:\d+\) Warning: Accessing non-existent property '(lineno|filename)' of module exports inside circular dependency(?: \(Use `node --trace-warnings \.\.\.` to show where the warning was created\))?$/
@@ -11,6 +12,12 @@ function isCliNoiseLine(line: string): boolean {
     NODE_CIRCULAR_WARNING_RE.test(trimmed) ||
     trimmed === '(Use `node --trace-warnings ...` to show where the warning was created)'
   )
+}
+
+function installHint(provider: Provider): string {
+  return provider === 'claude'
+    ? 'Claude: https://docs.claude.com/en/docs/claude-code'
+    : 'Codex: https://developers.openai.com/codex/cli'
 }
 
 export function filterAiCliNoise(text: string): string {
@@ -55,11 +62,31 @@ export async function runAiCli(
   }
 
   const env = await resolveSpawnEnv()
+  // Resolve against PATH ourselves so cross-spawn cannot pick up a
+  // project-local executable when cwd contains untrusted files. Fail closed:
+  // never hand cross-spawn a bare name that it could resolve from the cwd.
+  const executable = resolveExecutable(bin, env)
+  if (!executable) {
+    const label = provider === 'claude' ? 'Claude CLI' : 'Codex CLI'
+    throw new Error(
+      `${label} ("${bin}") was not found on PATH. ` +
+        `Install it and ensure it is on PATH. ${installHint(provider)}`
+    )
+  }
 
   return new Promise<string>((resolve, reject) => {
-    const proc = spawn(bin, args, { stdio: ['pipe', 'pipe', 'pipe'], env })
+    const proc = spawn(executable, args, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env,
+      windowsHide: true
+    }) as ChildProcessWithoutNullStreams
     let out = ''
     let err = ''
+
+    // A child that exits before reading stdin (e.g. a missing .cmd shim on
+    // Windows) makes write() fail with EPIPE. Without a listener that 'error'
+    // event is unhandled and would crash the Electron main process.
+    proc.stdin.on('error', () => {})
 
     proc.stdout.on('data', (d) => {
       const s = d.toString()
@@ -73,9 +100,13 @@ export async function runAiCli(
       onChunk(s)
     })
 
-    proc.on('error', (e) =>
-      reject(new Error(`Failed to start "${bin}": ${e.message}. Is the CLI installed and on PATH?`))
-    )
+    proc.on('error', (e) => {
+      reject(
+        new Error(
+          `Failed to start "${bin}": ${e.message}. Install it and ensure it is on PATH. ${installHint(provider)}`
+        )
+      )
+    })
     proc.on('close', (code) => {
       // Prefer stdout (the clean final message); fall back to stderr if a CLI
       // emitted its answer there instead.

@@ -61,6 +61,8 @@ export function HomeScreen({ onOpenProject }: HomeScreenProps) {
       const project = await window.api.newProject(name)
       loadProject(project)
       onOpenProject()
+    } catch (e) {
+      toast.error((e as Error).message)
     } finally {
       setCreating(false)
     }

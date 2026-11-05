@@ -1,4 +1,5 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
+import type { OpenDialogOptions } from 'electron'
 import {
   deleteProject,
   importProjectZip,
@@ -20,11 +21,14 @@ export function registerProject(): void {
 
   ipcMain.handle('project:importZip', async (e) => {
     const window = BrowserWindow.fromWebContents(e.sender) ?? undefined
-    const result = await dialog.showOpenDialog(window, {
+    const options: OpenDialogOptions = {
       title: 'Import Zip Project',
       properties: ['openFile'],
       filters: [{ name: 'Zip Archives', extensions: ['zip'] }]
-    })
+    }
+    const result = window
+      ? await dialog.showOpenDialog(window, options)
+      : await dialog.showOpenDialog(options)
     if (result.canceled || result.filePaths.length === 0) return null
     return importProjectZip(result.filePaths[0], await getAppSettings())
   })

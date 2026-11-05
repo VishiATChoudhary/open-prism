@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { toast } from 'sonner'
 import type { CompileResult, FileNode } from '@shared/types'
+import { isSameOrInside, joinDisplayPath, relativeToProject } from '@/lib/paths'
 import { useProject } from '@/state/useProject'
 
 const TEXT_EXT = new Set([
@@ -23,10 +24,6 @@ const TEXT_EXT = new Set([
 function isTextFile(name: string): boolean {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
   return TEXT_EXT.has(ext)
-}
-
-function relativeToProject(dir: string, path: string): string {
-  return path.startsWith(`${dir}/`) ? path.slice(dir.length + 1) : path
 }
 
 /** File-system operations shared by the explorer, top bar and compile path. */
@@ -72,7 +69,7 @@ export function useFiles() {
     async (parentDir: string, name: string, isDir: boolean) => {
       const clean = name.trim()
       if (!clean) return
-      const path = `${parentDir}/${clean}`
+      const path = joinDisplayPath(parentDir, clean)
       try {
         await window.api.createEntry(path, isDir)
         await refreshTree()
@@ -93,7 +90,7 @@ export function useFiles() {
         // close any open tabs under the deleted path
         const { openFiles, closeTab } = useProject.getState()
         openFiles
-          .filter((f) => f.path === node.path || f.path.startsWith(node.path + '/'))
+          .filter((f) => isSameOrInside(node.path, f.path))
           .forEach((f) => closeTab(f.path))
         await refreshTree()
       } catch (e) {
@@ -113,7 +110,7 @@ export function useFiles() {
         renameOpen(node.path, newPath)
         // keep meta.entry in sync if the main file itself was renamed
         if (entryPath === node.path && meta && dir) {
-          const rel = newPath.startsWith(dir + '/') ? newPath.slice(dir.length + 1) : newPath
+          const rel = relativeToProject(dir, newPath)
           setEntry(rel, newPath)
           await window.api.saveMeta(dir, { ...meta, entry: rel })
         }
@@ -127,14 +124,14 @@ export function useFiles() {
 
   const moveEntry = useCallback(
     async (node: FileNode, targetDir: string) => {
-      if (node.path === targetDir || targetDir.startsWith(`${node.path}/`)) return
+      if (isSameOrInside(node.path, targetDir)) return
       try {
         const oldEntryPath = useProject.getState().entryPath
         const newPath = await window.api.moveEntry(node.path, targetDir)
         const { renameOpen, meta, dir, setEntry } = useProject.getState()
         renameOpen(node.path, newPath)
 
-        if (oldEntryPath && (oldEntryPath === node.path || oldEntryPath.startsWith(`${node.path}/`)) && meta && dir) {
+        if (oldEntryPath && isSameOrInside(node.path, oldEntryPath) && meta && dir) {
           const nextEntryPath =
             oldEntryPath === node.path ? newPath : `${newPath}${oldEntryPath.slice(node.path.length)}`
           const rel = relativeToProject(dir, nextEntryPath)
@@ -166,7 +163,7 @@ export function useFiles() {
   const setMain = useCallback(async (node: FileNode) => {
     const { dir, meta, setEntry } = useProject.getState()
     if (!dir || !meta || node.type !== 'file') return
-    const rel = node.path.startsWith(dir + '/') ? node.path.slice(dir.length + 1) : node.path
+    const rel = relativeToProject(dir, node.path)
     setEntry(rel, node.path)
     try {
       await window.api.saveMeta(dir, { ...meta, entry: rel })

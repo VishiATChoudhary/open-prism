@@ -19,11 +19,16 @@ export function isSameOrInside(parent: string, child: string): boolean {
   return target === root || target.startsWith(`${root}/`)
 }
 
-/** Join a directory and a file name using the directory's native separator. */
+/**
+ * Join a directory and a relative path using the directory's native separator.
+ * The relative path's separators are normalized to match the directory, so a
+ * nested entry such as `sub/main.tex` becomes `sub\main.tex` on Windows.
+ */
 export function joinDisplayPath(dir: string, name: string): string {
   const separator = dir.includes('\\') ? '\\' : '/'
   const base = dir.replace(/[\\/]+$/, '')
-  return base ? `${base}${separator}${name}` : name
+  const relative = separator === '\\' ? name.replace(/[\\/]+/g, '\\') : name
+  return base ? `${base}${separator}${relative}` : relative
 }
 
 /**

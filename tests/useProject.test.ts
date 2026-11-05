@@ -40,6 +40,31 @@ describe('useProject path handling', () => {
     expect(st.openFiles[0].path).toBe('/proj/main.tex')
   })
 
+  it('normalizes a nested Windows entry and renames it consistently', () => {
+    const store = useProject.getState()
+    store.loadProject({
+      dir: 'C:\\proj',
+      meta: projectMeta('sub/main.tex'),
+      source: 'nested'
+    })
+
+    let st = useProject.getState()
+    expect(st.entryPath).toBe('C:\\proj\\sub\\main.tex')
+    expect(st.activePath).toBe('C:\\proj\\sub\\main.tex')
+    expect(st.openFiles).toEqual([
+      { path: 'C:\\proj\\sub\\main.tex', name: 'main.tex', content: 'nested', dirty: false }
+    ])
+
+    store.renameOpen('C:\\proj\\sub\\main.tex', 'C:\\proj\\sub\\intro.tex')
+
+    st = useProject.getState()
+    expect(st.entryPath).toBe('C:\\proj\\sub\\intro.tex')
+    expect(st.activePath).toBe('C:\\proj\\sub\\intro.tex')
+    expect(st.openFiles).toEqual([
+      { path: 'C:\\proj\\sub\\intro.tex', name: 'intro.tex', content: 'nested', dirty: false }
+    ])
+  })
+
   it('updates the entry, matching tabs and the active tab when renaming a Windows entry', () => {
     const store = useProject.getState()
     store.loadProject({ dir: 'C:\\proj', meta: projectMeta('main.tex'), source: 'main' })

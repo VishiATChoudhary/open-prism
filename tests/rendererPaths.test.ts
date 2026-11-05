@@ -119,4 +119,14 @@ describe('joinDisplayPath', () => {
       '/home/gusta/proj/main.tex'
     )
   })
+
+  it('normalizes nested relative names to Windows separators', () => {
+    expect(joinDisplayPath('C:\\proj', 'sub/main.tex')).toBe('C:\\proj\\sub\\main.tex')
+    expect(joinDisplayPath('C:\\proj\\', 'sub/main.tex')).toBe('C:\\proj\\sub\\main.tex')
+    expect(joinDisplayPath('C:\\proj', 'sub\\main.tex')).toBe('C:\\proj\\sub\\main.tex')
+  })
+
+  it('keeps POSIX nested relative names unchanged', () => {
+    expect(joinDisplayPath('/proj', 'sub/main.tex')).toBe('/proj/sub/main.tex')
+  })
 })

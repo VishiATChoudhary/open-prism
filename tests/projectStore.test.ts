@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { validateZipEntries } from '../src/main/services/projectStore'
+import { validateZipEntries } from '../src/main/services/zip'
 
 describe('validateZipEntries', () => {
   it('accepts normal project zip entries', () => {

@@ -11,7 +11,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "package:mac": "npm run build && node scripts/package-macos-dmg.mjs",
-    "package:win": "npm run build && electron-builder --win --x64",
+    "package:win": "npm run build && electron-builder --win --x64 --publish never",
     "start": "electron-vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

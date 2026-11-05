@@ -479,7 +479,7 @@ git commit -m "feat: spawn external CLIs through cross-spawn"
 - [ ] **Step 1: Install the dependency**
 
 ```bash
-npm install "fflate@^0.8.2"
+npm install "fflate@^0.8.3"
 ```
 
 Expected: `fflate` appears under `dependencies`.
@@ -942,7 +942,7 @@ Add an `author` field after `"license"`:
 Add the Windows script after `"package:mac"`:
 
 ```json
-    "package:win": "npm run build && electron-builder --win --x64",
+    "package:win": "npm run build && electron-builder --win --x64 --publish never",
 ```
 
 - [ ] **Step 3: Create electron-builder.yml**
@@ -996,7 +996,7 @@ rerun. This is the approved fallback from the spec.
 Run:
 
 ```bash
-npx --yes @electron/asar list dist/win-unpacked/resources/app.asar | grep -E "out/main|resources/app-icon.png" | head -10
+npx --yes @electron/asar list dist/win-unpacked/resources/app.asar | grep -Ei "out.main|out.preload|resources.app-icon.png" | head -10
 ```
 
 Expected: paths for `out/main/index.js` and `resources/app-icon.png`.
@@ -1037,11 +1037,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-14   # Apple Silicon (arm64)
+          - runner: macos-15   # Apple Silicon (arm64)
             arch: arm64
             package_cmd: package:mac
             artifacts: dist/*.dmg
-          - runner: macos-13   # Intel (x64)
+          - runner: macos-15-intel   # Intel (x64)
             arch: x64
             package_cmd: package:mac
             artifacts: dist/*.dmg
@@ -1052,12 +1052,13 @@ jobs:
               dist/*.exe
               dist/*.zip
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -1074,6 +1075,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: ${{ matrix.artifacts }}
+          fail_on_unmatched_files: true
           generate_release_notes: true
 
       - name: Upload workflow artifacts
@@ -1269,11 +1271,11 @@ The final `package.json` must contain all of the following:
 ```json
   "author": "Open Prism contributors",
   "scripts": {
-    "package:win": "npm run build && electron-builder --win --x64"
+    "package:win": "npm run build && electron-builder --win --x64 --publish never"
   },
   "dependencies": {
     "cross-spawn": "^7.0.6",
-    "fflate": "^0.8.2"
+    "fflate": "^0.8.3"
   },
   "devDependencies": {
     "@types/cross-spawn": "^6.0.6",
@@ -1319,7 +1321,7 @@ The first run may download NSIS tooling; allow network access.
 - [ ] **Step 7: Verify production dependencies are packaged**
 
 ```bash
-npx --yes @electron/asar list dist/win-unpacked/resources/app.asar | grep -E "node_modules/(cross-spawn|fflate)" | head -10
+npx --yes @electron/asar list dist/win-unpacked/resources/app.asar | grep -Ei "node_modules.(cross-spawn|fflate)" | head -10
 ```
 
 Expected: at least one path for `cross-spawn` and one for `fflate`.

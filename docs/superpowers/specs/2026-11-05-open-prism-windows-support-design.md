@@ -66,7 +66,7 @@ These contracts are frozen before agents are dispatched so downstream work can p
 | `resolveSpawnEnv()` | Signature unchanged: `Promise<NodeJS.ProcessEnv>` |
 | `importProjectZip(zipPath, settings)` | Signature unchanged |
 | Package manager | npm (`package-lock.json`); untracked pnpm files are out of scope |
-| Node in CI | 20 (unchanged) |
+| Node in CI | 22 |
 
 ### 5.2 Process execution layer
 
@@ -172,7 +172,7 @@ nsis:
 
 `package.json` changes:
 
-- Add `"package:win": "npm run build && electron-builder --win --x64"`.
+- Add `"package:win": "npm run build && electron-builder --win --x64 --publish never"`.
 - Add an `author` field (electron-builder metadata).
 - Add runtime dependencies: `cross-spawn`, `fflate`.
 - Add dev dependency: `electron-builder`.
@@ -217,6 +217,17 @@ Update `README.md`:
 - Build instructions: `npm run package:win`.
 - Note that the unsigned installer triggers SmartScreen and how to proceed.
 - Document Tectonic install options for Windows (Scoop, Chocolatey, cargo, official installer).
+
+### 5.8 Implementation hardening
+
+The shipped implementation adds the following defenses beyond the original design:
+
+- **Fail-closed executable resolution.** `resolveExecutable()` resolves `claude`, `codex`, and `tectonic` against absolute `PATH` entries only. Relative and empty entries (including `.`) are skipped, so a project-local executable can never shadow the real CLI when the working directory is an untrusted project. Windows lookup applies `PATHEXT` and case-insensitive file matching. Failure to resolve produces a not-found error; a bare name is never handed to `cross-spawn`.
+- **stdin error guard.** `aiCli.ts` attaches an `error` listener to the child's stdin before writing the prompt. A child that exits before reading stdin (for example, a missing `.cmd` shim) raises `EPIPE`; the guard converts that into the normal exit-code path instead of an uncaught exception.
+- **ZIP size and entry-count limits.** `readZip()` enforces `DEFAULT_ZIP_LIMITS`: 200 MiB archive, 100 MiB per entry, 500 MiB total uncompressed, and 5000 entries. Limits are injectable for tests.
+- **Per-segment validation.** Every ZIP entry is validated segment by segment after splitting on `/`. Entries with absolute paths, drive letters, backslashes, empty/`.`/`..` segments, trailing dots or spaces, reserved Windows device names, or forbidden characters are rejected before extraction.
+- **Safe `meta.entry` sanitization.** `normalizeProjectEntry()` converts legacy backslashes to `/` and rejects absolute paths, drive letters, and unsafe segments, falling back to `main.tex`. Project entries are therefore safe to `join()` with the project directory and remain portable across macOS and Windows.
+- **Renderer path normalization.** `src/renderer/lib/paths.ts` normalizes mixed separators and compares paths using `/`, so file-tree selection, source jumps, and rename/move rewrites behave identically with `\` and `/` paths.
 
 ## 6. Parallel Execution Architecture
 

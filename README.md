@@ -12,6 +12,9 @@
   <a href="https://github.com/VishiATChoudhary/open-prism/releases/latest">
     <img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS%20DMG-2f81f7?style=for-the-badge&logo=apple&logoColor=white" />
   </a>
+  <a href="https://github.com/VishiATChoudhary/open-prism/releases/latest">
+    <img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows%20x64-2f81f7?style=for-the-badge&logo=windows&logoColor=white" />
+  </a>
   <a href="#develop">
     <img alt="Run locally" src="https://img.shields.io/badge/Run-Locally-8b5cf6?style=for-the-badge&logo=electron&logoColor=white" />
   </a>
@@ -56,17 +59,24 @@ first-class path.
 
 ## Download
 
-Get the latest macOS build from the
+Get the latest build from the
 [Releases page](https://github.com/VishiATChoudhary/open-prism/releases/latest).
 
-The current packaged app is ad-hoc signed and not Apple-notarized. On first
-launch, macOS may require you to right-click the app and choose **Open**.
+- macOS DMG (Apple Silicon and Intel)
+- Windows x64 installer and portable ZIP
+
+The macOS app is ad-hoc signed and not Apple-notarized. On first launch, macOS
+may require you to right-click the app and choose **Open**.
+
+The Windows installer is currently unsigned, so SmartScreen may show
+"Unknown publisher". Choose **More info → Run anyway**.
 
 ## Requirements
 
-- macOS for the packaged desktop app
+- macOS 12+ for the macOS app, or Windows 10/11 x64 for the Windows app
 - The [`claude` CLI](https://docs.claude.com/en/docs/claude-code) installed, authenticated, and on your `PATH` (or `codex` as an alternative)
 - [Tectonic](https://tectonic-typesetting.github.io) available on your `PATH`
+  - Windows: `scoop install tectonic`, `choco install tectonic`, `cargo install tectonic`, or the official installer
 - Node.js 20+ if you are developing locally
 
 ## Develop
@@ -88,12 +98,21 @@ Create a macOS DMG:
 npm run package:mac
 ```
 
-The generated installer is written to `dist/`.
+Create the Windows installer and portable ZIP:
+
+```bash
+npm run package:win
+```
+
+The generated artifacts are written to `dist/`:
+`Open-Prism-<version>-win-x64.exe` (NSIS) and
+`Open-Prism-<version>-win-x64.zip` (portable).
 
 ## How It Works
 
-Open Prism stores projects in `~/.openprism`. Each project is a plain folder
-with your source files, assets, build output, and a `.prism.json` metadata file.
+Open Prism stores projects in `~/.openprism` (`C:\Users\<you>\.openprism` on
+Windows). Each project is a plain folder with your source files, assets, build
+output, and a `.prism.json` metadata file.
 
 The workspace includes:
 

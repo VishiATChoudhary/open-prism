@@ -12,6 +12,9 @@
   <a href="https://github.com/VishiATChoudhary/open-prism/releases/latest">
     <img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS%20DMG-2f81f7?style=for-the-badge&logo=apple&logoColor=white" />
   </a>
+  <a href="https://github.com/VishiATChoudhary/open-prism/releases/latest">
+    <img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows%20x64-2f81f7?style=for-the-badge" />
+  </a>
   <a href="#develop">
     <img alt="Run locally" src="https://img.shields.io/badge/Run-Locally-8b5cf6?style=for-the-badge&logo=electron&logoColor=white" />
   </a>
@@ -52,21 +55,30 @@ first-class path.
 
 | Draft with Claude | Compile | Iterate | Export |
 | --- | --- | --- | --- |
-| Chat in plain language; your local Claude CLI returns editable LaTeX. | Compile with Tectonic from inside the app. | Show Claude the errors, let it repair them, keep editing. | Save the latest compiled PDF directly to `~/Downloads`. |
+| Chat in plain language; your local Claude CLI returns editable LaTeX. | Compile with Tectonic from inside the app. | Show Claude the errors, let it repair them, keep editing. | Save the latest compiled PDF directly to your Downloads folder. |
 
 ## Download
 
-Get the latest macOS build from the
+Get the latest build from the
 [Releases page](https://github.com/VishiATChoudhary/open-prism/releases/latest).
 
-The current packaged app is ad-hoc signed and not Apple-notarized. On first
-launch, macOS may require you to right-click the app and choose **Open**.
+- macOS DMG (Apple Silicon and Intel)
+- Windows x64 installer and portable ZIP (extract the ZIP and run `Open Prism.exe`)
+
+The macOS app is ad-hoc signed and not Apple-notarized. On first launch, macOS
+may require you to right-click the app and choose **Open**.
+
+The Windows installer and portable executable are currently unsigned, so
+SmartScreen may show "Unknown publisher" or "Windows protected your PC". Choose
+**More info → Run anyway**.
 
 ## Requirements
 
-- macOS for the packaged desktop app
+- macOS 12+ for the macOS app, or Windows 10/11 x64 for the Windows app
 - The [`claude` CLI](https://docs.claude.com/en/docs/claude-code) installed, authenticated, and on your `PATH` (or `codex` as an alternative)
+  - Windows: install with the native installer (`irm https://claude.ai/install.ps1 | iex`) or a global npm install (`npm install -g @anthropic-ai/claude-code`); make sure `claude` ends up on your `PATH`
 - [Tectonic](https://tectonic-typesetting.github.io) available on your `PATH`
+  - Windows: `scoop install tectonic` (recommended), the official Windows ZIP from GitHub Releases (extract it and add the folder to `PATH`), or `cargo install tectonic` (requires Rust and C/C++ toolchains). Chocolatey's community package is outdated and not recommended.
 - Node.js 20+ if you are developing locally
 
 ## Develop
@@ -88,12 +100,23 @@ Create a macOS DMG:
 npm run package:mac
 ```
 
-The generated installer is written to `dist/`.
+`npm run package:mac` must run on macOS and writes the DMG to `dist/`.
+
+Create the Windows installer and portable ZIP:
+
+```bash
+npm run package:win
+```
+
+`npm run package:win` must run on Windows and writes
+`Open-Prism-<version>-win-x64.exe` (NSIS) and
+`Open-Prism-<version>-win-x64.zip` (portable) to `dist/`.
 
 ## How It Works
 
-Open Prism stores projects in `~/.openprism`. Each project is a plain folder
-with your source files, assets, build output, and a `.prism.json` metadata file.
+Open Prism stores projects in `~/.openprism` (`C:\Users\<you>\.openprism` on
+Windows). Each project is a plain folder with your source files, assets, build
+output, and a `.prism.json` metadata file.
 
 The workspace includes:
 
@@ -116,6 +139,8 @@ The workspace includes:
     .prism.json
   settings.json
 ```
+
+On Windows, `~/.openprism` means `C:\Users\<you>\.openprism`.
 
 ## License
 

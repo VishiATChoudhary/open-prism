@@ -4,6 +4,7 @@ import {
   joinDisplayPath,
   movePath,
   normalizeSeparators,
+  parentPath,
   relativeToProject
 } from '../src/renderer/lib/paths'
 
@@ -18,6 +19,31 @@ describe('normalizeSeparators', () => {
     expect(normalizeSeparators('C:\\Users\\gusta\\')).toBe('C:/Users/gusta')
     expect(normalizeSeparators('/home/gusta/project//')).toBe('/home/gusta/project')
     expect(normalizeSeparators('')).toBe('')
+  })
+})
+
+describe('parentPath', () => {
+  it('returns the parent for POSIX paths', () => {
+    expect(parentPath('/proj/main.tex')).toBe('/proj')
+    expect(parentPath('/proj/sub/main.tex')).toBe('/proj/sub')
+  })
+
+  it('returns the parent for Windows paths', () => {
+    expect(parentPath('C:\\proj\\main.tex')).toBe('C:\\proj')
+    expect(parentPath('C:\\proj\\sub\\main.tex')).toBe('C:\\proj\\sub')
+    expect(parentPath('C:\\proj\\sub/main.tex')).toBe('C:\\proj\\sub')
+  })
+
+  it('handles root paths', () => {
+    expect(parentPath('/main.tex')).toBe('')
+    expect(parentPath('C:\\main.tex')).toBe('C:')
+    expect(parentPath('/')).toBe('')
+    expect(parentPath('C:\\')).toBe('C:')
+  })
+
+  it('returns paths without a separator unchanged', () => {
+    expect(parentPath('main.tex')).toBe('main.tex')
+    expect(parentPath('')).toBe('')
   })
 })
 

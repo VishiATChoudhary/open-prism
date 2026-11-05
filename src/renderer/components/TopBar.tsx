@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Check, Download, FilePlus, Home, Loader2, PanelLeft, Pencil, Play, Save, X } from 'lucide-react'
 import { useProject } from '@/state/useProject'
 import { useFiles } from '@/state/useFiles'
+import { normalizeSeparators } from '@/lib/paths'
 import { Button } from '@/components/ui/button'
 import { PrismGlyph } from '@/components/chat/PrismGlyph'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -19,7 +20,9 @@ export function TopBar({ onHome }: TopBarProps) {
   const toggleSidebar = useProject((s) => s.toggleSidebar)
   const { writeAllDirty, compileProject } = useFiles()
 
-  const projectName = dir?.split('/').filter(Boolean).pop() ?? 'no project'
+  const projectName = dir
+    ? normalizeSeparators(dir).split('/').filter(Boolean).pop() ?? 'no project'
+    : 'no project'
 
   const [editing, setEditing] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
@@ -53,8 +56,12 @@ export function TopBar({ onHome }: TopBarProps) {
   async function newProject() {
     const name = window.prompt('New project name')
     if (!name?.trim()) return
-    const res = await window.api.newProject(name)
-    loadProject(res)
+    try {
+      const res = await window.api.newProject(name)
+      loadProject(res)
+    } catch (e) {
+      toast.error((e as Error).message)
+    }
   }
 
   async function save() {

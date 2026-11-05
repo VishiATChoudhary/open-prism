@@ -47,8 +47,8 @@ describe('compile', () => {
       ok: false,
       log: 'Tectonic was not found on PATH.',
       summary:
-        'Tectonic not found. Install it with Scoop, Chocolatey, or cargo, ' +
-        'or see https://tectonic-typesetting.github.io'
+        'Tectonic not found. Install it and ensure it is on PATH: ' +
+        'https://tectonic-typesetting.github.io'
     })
     expect(result).not.toHaveProperty('pdfPath')
     expect(existsSync(join(projectDir, 'build'))).toBe(false)

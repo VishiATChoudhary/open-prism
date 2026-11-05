@@ -77,7 +77,8 @@ export async function runAiCli(
   return new Promise<string>((resolve, reject) => {
     const proc = spawn(executable, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
-      env
+      env,
+      windowsHide: true
     }) as ChildProcessWithoutNullStreams
     let out = ''
     let err = ''

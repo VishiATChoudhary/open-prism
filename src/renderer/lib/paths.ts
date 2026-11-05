@@ -3,6 +3,15 @@ export function normalizeSeparators(path: string): string {
   return path.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/\/+$/, '')
 }
 
+/**
+ * Return the parent of `path`, honoring both `/` and `\` separators. Paths
+ * without a separator are returned unchanged.
+ */
+export function parentPath(path: string): string {
+  const index = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
+  return index === -1 ? path : path.slice(0, index)
+}
+
 /** Return `path` relative to `dir`, or the normalized path when it is outside. */
 export function relativeToProject(dir: string, path: string): string {
   const root = normalizeSeparators(dir)

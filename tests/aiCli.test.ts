@@ -66,7 +66,7 @@ describe('runAiCli spawning', () => {
     expect(spawnMock).toHaveBeenCalledWith(
       'claude',
       ['-p'],
-      expect.objectContaining({ stdio: ['pipe', 'pipe', 'pipe'] })
+      expect.objectContaining({ stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true })
     )
     expect(spawnMock.mock.calls[0]?.[2]).not.toHaveProperty('shell')
     expect(child.stdin.write).toHaveBeenCalledWith('hello')
@@ -89,7 +89,7 @@ describe('runAiCli spawning', () => {
     expect(spawnMock).toHaveBeenCalledWith(
       'C:\\tools\\claude.cmd',
       ['-p', '--model', 'sonnet'],
-      expect.objectContaining({ stdio: ['pipe', 'pipe', 'pipe'] })
+      expect.objectContaining({ stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true })
     )
   })
 

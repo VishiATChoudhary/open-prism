@@ -76,6 +76,12 @@ Raw evidence: `%TEMP%\open-prism-qa-results-run1.json`, `%TEMP%\open-prism-qa-re
 5. **Unsigned build.** Silent automation installs bypass SmartScreen, but interactive users will see the "Unknown publisher" warning until the build is code-signed.
 6. **Cosmetic:** the uninstall registry entry has an empty `InstallLocation` value.
 
+## Coverage notes
+
+- ZIP import is covered by `tests/zip.test.ts` and `tests/projectStore.test.ts`.
+- Codex was not installed on the QA machine; its path was exercised through automated tests only.
+- Desktop shortcut and icon creation, and silent uninstall, were verified during NSIS QA.
+
 ## Verdict
 
 Windows end-to-end functionality is verified in the packaged app: project creation, save/reopen, Tectonic compilation, PDF preview file generation, PDF export to Downloads, file tree, rename/delete, Claude CLI integration, portable ZIP launch, per-user NSIS install/launch/uninstall, and `.cmd` shim resolution all pass. Residual items are cosmetic or environmental; no functional blocker was found.

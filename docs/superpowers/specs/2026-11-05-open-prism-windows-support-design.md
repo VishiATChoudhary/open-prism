@@ -1,7 +1,7 @@
 # Open Prism — Windows Support Design Spec
 
 **Date:** 2026-11-05
-**Status:** Approved design (implementation not started)
+**Status:** Implemented and verified (2026-11-05)
 **Related analysis:** [`docs/windows-port-effort-analysis.md`](../../windows-port-effort-analysis.md)
 
 ## 1. Context

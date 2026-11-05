@@ -1,8 +1,9 @@
+import { promises as fsPromises } from 'node:fs'
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { strToU8, zipSync } from 'fflate'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_ZIP_LIMITS,
   extractZip,
@@ -30,6 +31,7 @@ async function makeTempDir(prefix: string): Promise<string> {
 }
 
 afterEach(async () => {
+  vi.restoreAllMocks()
   await Promise.all(cleanup.splice(0).map((dir) => rm(dir, { recursive: true, force: true })))
 })
 
@@ -90,6 +92,17 @@ describe('zip import limits', () => {
     await expect(readZip(zipPath, { maxArchiveBytes: 1 })).rejects.toThrow(
       'Zip archive is too large.'
     )
+  })
+
+  it('rejects archives over a low compressed size limit before reading them', async () => {
+    const zipPath = await makeZip({ 'main.tex': 'hello' })
+    const readSpy = vi.spyOn(fsPromises, 'readFile')
+
+    await expect(readZip(zipPath, { maxArchiveBytes: 16 })).rejects.toThrow(
+      'Zip archive is too large.'
+    )
+
+    expect(readSpy).not.toHaveBeenCalled()
   })
 
   it('rejects entries over the uncompressed entry limit', async () => {

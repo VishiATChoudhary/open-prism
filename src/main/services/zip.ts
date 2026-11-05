@@ -77,6 +77,11 @@ export async function readZip(
   limits: Partial<ZipLimits> = {}
 ): Promise<Map<string, Uint8Array>> {
   const effective = resolveLimits(limits)
+  const stat = await fs.stat(zipPath)
+  if (stat.size > effective.maxArchiveBytes) {
+    throw new Error(ARCHIVE_TOO_LARGE)
+  }
+
   const buffer = new Uint8Array(await fs.readFile(zipPath))
   if (buffer.byteLength > effective.maxArchiveBytes) {
     throw new Error(ARCHIVE_TOO_LARGE)

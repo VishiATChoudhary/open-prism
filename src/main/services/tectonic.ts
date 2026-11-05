@@ -22,8 +22,8 @@ export async function compile(projectDir: string, entry: string): Promise<Compil
       ok: false,
       log: 'Tectonic was not found on PATH.',
       summary:
-        'Tectonic not found. Install it with Scoop, Chocolatey, or cargo, ' +
-        'or see https://tectonic-typesetting.github.io'
+        'Tectonic not found. Install it and ensure it is on PATH: ' +
+        'https://tectonic-typesetting.github.io'
     }
   }
 
@@ -35,7 +35,8 @@ export async function compile(projectDir: string, entry: string): Promise<Compil
     const proc = spawn(executable, ['--outdir', buildDir, '--keep-logs', entryPath], {
       cwd: projectDir,
       env,
-      stdio: ['pipe', 'pipe', 'pipe']
+      stdio: ['pipe', 'pipe', 'pipe'],
+      windowsHide: true
     }) as ChildProcessWithoutNullStreams
     let settled = false
     let log = ''
@@ -54,8 +55,8 @@ export async function compile(projectDir: string, entry: string): Promise<Compil
         ok: false,
         log: `Failed to start tectonic: ${err.message}`,
         summary:
-          'Tectonic not found. Install it with Scoop, Chocolatey, or cargo, ' +
-          'or see https://tectonic-typesetting.github.io'
+          'Tectonic not found. Install it and ensure it is on PATH: ' +
+          'https://tectonic-typesetting.github.io'
       })
     })
 

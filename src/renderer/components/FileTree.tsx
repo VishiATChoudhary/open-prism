@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import type { FileNode } from '@shared/types'
 import { cn } from '@/lib/utils'
+import { isSameOrInside, normalizeSeparators, parentPath } from '@/lib/paths'
 import { useProject } from '@/state/useProject'
 import { useFiles } from '@/state/useFiles'
 
@@ -73,7 +74,7 @@ export function FileTree() {
   const dirtyPaths = new Set(openFiles.filter((f) => f.dirty).map((f) => f.path))
 
   function nameFromPath(path: string) {
-    return path.split('/').filter(Boolean).pop() ?? path
+    return normalizeSeparators(path).split('/').filter(Boolean).pop() ?? path
   }
 
   function droppedExternalPaths(e: DragEvent) {
@@ -88,7 +89,7 @@ export function FileTree() {
 
   function canDropProjectPath(path: string | null, targetDir: string) {
     if (!path) return true
-    return path !== targetDir && !targetDir.startsWith(`${path}/`)
+    return !isSameOrInside(path, targetDir)
   }
 
   function handleDragOver(e: DragEvent, targetDir: string) {
@@ -161,7 +162,7 @@ export function FileTree() {
       const isMain = node.path === entryPath
       const isRenaming = renamingPath === node.path
       const indent = 8 + depth * 12
-      const targetDir = isDir ? node.path : node.path.split('/').slice(0, -1).join('/')
+      const targetDir = isDir ? node.path : parentPath(node.path)
       const isDropTarget = dropTarget === (isDir ? node.path : null)
 
       return (

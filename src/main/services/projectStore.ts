@@ -293,8 +293,9 @@ export async function openProject(dir: string, settings: Settings): Promise<Open
 }
 
 export async function saveProject(dir: string, meta: ProjectMeta, source: string): Promise<void> {
-  await fs.writeFile(join(dir, meta.entry), source, 'utf8')
-  await fs.writeFile(join(dir, META_FILE), JSON.stringify(normalizeProjectMeta(meta, meta.settings), null, 2), 'utf8')
+  const nextMeta = normalizeProjectMeta(meta, meta.settings)
+  await fs.writeFile(join(dir, nextMeta.entry), source, 'utf8')
+  await fs.writeFile(join(dir, META_FILE), JSON.stringify(nextMeta, null, 2), 'utf8')
 }
 
 /** Persist project metadata (entry, settings, chat) without touching file content. */

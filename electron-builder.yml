@@ -1,0 +1,24 @@
+appId: dev.openprism.app
+productName: Open Prism
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**/*
+  - resources/**/*
+  - package.json
+asar: true
+win:
+  icon: resources/app-icon.png
+  artifactName: Open-Prism-${version}-win-${arch}.${ext}
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: zip
+      arch: [x64]
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true

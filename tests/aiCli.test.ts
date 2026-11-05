@@ -52,6 +52,7 @@ describe('runAiCli spawning', () => {
   })
 
   it('spawns without a shell and pipes the prompt to stdin', async () => {
+    resolveExecutableMock.mockReturnValue('claude')
     const child = fakeChild()
     spawnMock.mockReturnValue(child)
 
@@ -93,6 +94,7 @@ describe('runAiCli spawning', () => {
   })
 
   it('survives stdin errors when the child exits before reading the prompt', async () => {
+    resolveExecutableMock.mockReturnValue('claude')
     const child = fakeChild()
     spawnMock.mockReturnValue(child)
 
@@ -115,6 +117,7 @@ describe('runAiCli spawning', () => {
   ] as const)(
     'reports only the %s install hint when the CLI cannot be started',
     async (provider, expectedHint, forbiddenHint) => {
+      resolveExecutableMock.mockReturnValue(provider)
       const child = fakeChild()
       spawnMock.mockReturnValue(child)
 
@@ -128,6 +131,32 @@ describe('runAiCli spawning', () => {
         (e: Error) => e
       )
       expect(error).toBeInstanceOf(Error)
+      expect(error?.message).toContain(expectedHint)
+      expect(error?.message).not.toContain(forbiddenHint)
+    }
+  )
+
+  it.each([
+    [
+      'claude',
+      'Claude CLI',
+      'Claude: https://docs.claude.com/en/docs/claude-code',
+      'Codex:'
+    ],
+    ['codex', 'Codex CLI', 'Codex: https://developers.openai.com/codex/cli', 'Claude:']
+  ] as const)(
+    'fails closed without spawning when the %s CLI is not on PATH',
+    async (provider, label, expectedHint, forbiddenHint) => {
+      resolveExecutableMock.mockReturnValue(null)
+
+      const error = await runAiCli(provider, '', 'hi', () => {}).then(
+        () => null,
+        (e: Error) => e
+      )
+
+      expect(spawnMock).not.toHaveBeenCalled()
+      expect(error).toBeInstanceOf(Error)
+      expect(error?.message).toContain(`${label} ("${provider}") was not found on PATH`)
       expect(error?.message).toContain(expectedHint)
       expect(error?.message).not.toContain(forbiddenHint)
     }

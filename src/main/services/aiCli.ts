@@ -14,6 +14,12 @@ function isCliNoiseLine(line: string): boolean {
   )
 }
 
+function installHint(provider: Provider): string {
+  return provider === 'claude'
+    ? 'Claude: https://docs.claude.com/en/docs/claude-code'
+    : 'Codex: https://developers.openai.com/codex/cli'
+}
+
 export function filterAiCliNoise(text: string): string {
   const hasTrailingNewline = /\r?\n$/.test(text)
   const lines = text.split(/\r?\n/)
@@ -57,8 +63,16 @@ export async function runAiCli(
 
   const env = await resolveSpawnEnv()
   // Resolve against PATH ourselves so cross-spawn cannot pick up a
-  // project-local executable when cwd contains untrusted files.
-  const executable = resolveExecutable(bin, env) ?? bin
+  // project-local executable when cwd contains untrusted files. Fail closed:
+  // never hand cross-spawn a bare name that it could resolve from the cwd.
+  const executable = resolveExecutable(bin, env)
+  if (!executable) {
+    const label = provider === 'claude' ? 'Claude CLI' : 'Codex CLI'
+    throw new Error(
+      `${label} ("${bin}") was not found on PATH. ` +
+        `Install it and ensure it is on PATH. ${installHint(provider)}`
+    )
+  }
 
   return new Promise<string>((resolve, reject) => {
     const proc = spawn(executable, args, {
@@ -86,13 +100,9 @@ export async function runAiCli(
     })
 
     proc.on('error', (e) => {
-      const installHint =
-        provider === 'claude'
-          ? 'Claude: https://docs.claude.com/en/docs/claude-code'
-          : 'Codex: https://developers.openai.com/codex/cli'
       reject(
         new Error(
-          `Failed to start "${bin}": ${e.message}. Install it and ensure it is on PATH. ${installHint}`
+          `Failed to start "${bin}": ${e.message}. Install it and ensure it is on PATH. ${installHint(provider)}`
         )
       )
     })

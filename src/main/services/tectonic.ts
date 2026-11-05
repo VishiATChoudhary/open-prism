@@ -12,13 +12,24 @@ import { resolveExecutable, resolveSpawnEnv } from './spawnEnv'
  * persist unsaved editor buffers before invoking this.
  */
 export async function compile(projectDir: string, entry: string): Promise<CompileResult> {
+  const env = await resolveSpawnEnv()
+  // Resolve against PATH ourselves so a project-local tectonic executable
+  // cannot shadow the real one when compiling untrusted projects. Fail closed:
+  // never hand cross-spawn a bare name that it could resolve from the cwd.
+  const executable = resolveExecutable('tectonic', env)
+  if (!executable) {
+    return {
+      ok: false,
+      log: 'Tectonic was not found on PATH.',
+      summary:
+        'Tectonic not found. Install it with Scoop, Chocolatey, or cargo, ' +
+        'or see https://tectonic-typesetting.github.io'
+    }
+  }
+
   const entryPath = join(projectDir, entry)
   const buildDir = join(projectDir, 'build')
   await fs.mkdir(buildDir, { recursive: true })
-  const env = await resolveSpawnEnv()
-  // Resolve against PATH ourselves so a project-local tectonic executable
-  // cannot shadow the real one when compiling untrusted projects.
-  const executable = resolveExecutable('tectonic', env) ?? 'tectonic'
 
   return new Promise<CompileResult>((resolve) => {
     const proc = spawn(executable, ['--outdir', buildDir, '--keep-logs', entryPath], {

@@ -15,11 +15,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-14   # Apple Silicon (arm64)
+          - runner: macos-15   # Apple Silicon (arm64)
             arch: arm64
             package_cmd: package:mac
             artifacts: dist/*.dmg
-          - runner: macos-13   # Intel (x64)
+          - runner: macos-15-intel   # Intel (x64)
             arch: x64
             package_cmd: package:mac
             artifacts: dist/*.dmg
@@ -30,12 +30,13 @@ jobs:
               dist/*.exe
               dist/*.zip
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -52,6 +53,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: ${{ matrix.artifacts }}
+          fail_on_unmatched_files: true
           generate_release_notes: true
 
       - name: Upload workflow artifacts

@@ -1,4 +1,5 @@
 import { spawn } from 'child_process'
+import { accessSync, constants as fsConstants, readdirSync, statSync } from 'fs'
 import { homedir } from 'os'
 import { posix, win32 } from 'path'
 
@@ -82,6 +83,101 @@ export function buildSpawnPath(input: PathInput): string {
   }
 
   return merged.join(sep)
+}
+
+const DEFAULT_PATHEXT = ['.COM', '.EXE', '.BAT', '.CMD']
+
+/** PATHEXT extensions, normalized to start with a dot. */
+function pathextExtensions(env: NodeJS.ProcessEnv): string[] {
+  const configured = (env.PATHEXT ?? '')
+    .split(';')
+    .map((ext) => ext.trim())
+    .filter(Boolean)
+  const extensions = configured.length > 0 ? configured : DEFAULT_PATHEXT
+  return extensions.map((ext) => (ext.startsWith('.') ? ext : `.${ext}`))
+}
+
+/**
+ * Look for `bin` inside one PATH directory. Windows matches case-insensitively
+ * (both the PATHEXT extension and the file name); POSIX additionally requires
+ * the file to be executable.
+ */
+function findExecutableInDir(
+  dir: string,
+  bin: string,
+  env: NodeJS.ProcessEnv,
+  platform: NodeJS.Platform
+): string | null {
+  if (platform === 'win32') {
+    const names = win32.extname(bin)
+      ? [bin]
+      : pathextExtensions(env).map((ext) => `${bin}${ext}`)
+
+    let entries: string[]
+    try {
+      entries = readdirSync(dir)
+    } catch {
+      return null
+    }
+
+    const actualByLower = new Map<string, string>()
+    for (const entry of entries) {
+      const key = entry.toLowerCase()
+      if (!actualByLower.has(key)) actualByLower.set(key, entry)
+    }
+
+    for (const name of names) {
+      const actual = actualByLower.get(name.toLowerCase())
+      if (!actual) continue
+      const candidate = win32.join(dir, actual)
+      try {
+        if (statSync(candidate).isFile()) return candidate
+      } catch {
+        // Unreadable entry: keep scanning the remaining candidates.
+      }
+    }
+    return null
+  }
+
+  const candidate = posix.join(dir, bin)
+  try {
+    if (!statSync(candidate).isFile()) return null
+    accessSync(candidate, fsConstants.X_OK)
+    return candidate
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Resolve `bin` to an absolute path by scanning PATH. Returns null when no
+ * matching file exists.
+ *
+ * Only absolute directory entries are considered: a project-local
+ * `tectonic.cmd` (or `.` on POSIX) must never shadow the real CLI when `cwd`
+ * is an untrusted project directory. Relative and empty entries are skipped.
+ */
+export function resolveExecutable(
+  bin: string,
+  env: NodeJS.ProcessEnv,
+  platform: NodeJS.Platform = process.platform
+): string | null {
+  if (!bin) return null
+
+  const separator = platform === 'win32' ? ';' : ':'
+  const isAbsolute = platform === 'win32' ? win32.isAbsolute : posix.isAbsolute
+  const pathValue = env.PATH ?? env.Path ?? ''
+
+  for (const rawEntry of pathValue.split(separator)) {
+    // PATH entries are sometimes quoted ("C:\Program Files\...").
+    const entry = rawEntry.trim().replace(/^"(.*)"$/, '$1')
+    if (!entry || !isAbsolute(entry)) continue
+
+    const resolved = findExecutableInDir(entry, bin, env, platform)
+    if (resolved) return resolved
+  }
+
+  return null
 }
 
 /**

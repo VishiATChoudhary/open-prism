@@ -4,7 +4,7 @@ import { join, basename } from 'path'
 import { promises as fs } from 'fs'
 import type { CompileResult } from '../../shared/types'
 import { summarizeTectonicLog } from '../../shared/tectonicLog'
-import { resolveSpawnEnv } from './spawnEnv'
+import { resolveExecutable, resolveSpawnEnv } from './spawnEnv'
 
 /**
  * Compiles an entry .tex with Tectonic into <projectDir>/build. The entry and
@@ -16,11 +16,15 @@ export async function compile(projectDir: string, entry: string): Promise<Compil
   const buildDir = join(projectDir, 'build')
   await fs.mkdir(buildDir, { recursive: true })
   const env = await resolveSpawnEnv()
+  // Resolve against PATH ourselves so a project-local tectonic executable
+  // cannot shadow the real one when compiling untrusted projects.
+  const executable = resolveExecutable('tectonic', env) ?? 'tectonic'
 
   return new Promise<CompileResult>((resolve) => {
-    const proc = spawn('tectonic', ['--outdir', buildDir, '--keep-logs', entryPath], {
+    const proc = spawn(executable, ['--outdir', buildDir, '--keep-logs', entryPath], {
       cwd: projectDir,
-      env
+      env,
+      stdio: ['pipe', 'pipe', 'pipe']
     }) as ChildProcessWithoutNullStreams
     let settled = false
     let log = ''

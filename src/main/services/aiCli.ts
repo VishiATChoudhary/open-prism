@@ -1,7 +1,7 @@
 import spawn from 'cross-spawn'
 import type { ChildProcessWithoutNullStreams } from 'child_process'
 import type { Provider } from '../../shared/types'
-import { resolveSpawnEnv } from './spawnEnv'
+import { resolveExecutable, resolveSpawnEnv } from './spawnEnv'
 
 const NODE_CIRCULAR_WARNING_RE =
   /^\(node:\d+\) Warning: Accessing non-existent property '(lineno|filename)' of module exports inside circular dependency(?: \(Use `node --trace-warnings \.\.\.` to show where the warning was created\))?$/
@@ -56,14 +56,22 @@ export async function runAiCli(
   }
 
   const env = await resolveSpawnEnv()
+  // Resolve against PATH ourselves so cross-spawn cannot pick up a
+  // project-local executable when cwd contains untrusted files.
+  const executable = resolveExecutable(bin, env) ?? bin
 
   return new Promise<string>((resolve, reject) => {
-    const proc = spawn(bin, args, {
+    const proc = spawn(executable, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
       env
     }) as ChildProcessWithoutNullStreams
     let out = ''
     let err = ''
+
+    // A child that exits before reading stdin (e.g. a missing .cmd shim on
+    // Windows) makes write() fail with EPIPE. Without a listener that 'error'
+    // event is unhandled and would crash the Electron main process.
+    proc.stdin.on('error', () => {})
 
     proc.stdout.on('data', (d) => {
       const s = d.toString()
@@ -77,15 +85,17 @@ export async function runAiCli(
       onChunk(s)
     })
 
-    proc.on('error', (e) =>
+    proc.on('error', (e) => {
+      const installHint =
+        provider === 'claude'
+          ? 'Claude: https://docs.claude.com/en/docs/claude-code'
+          : 'Codex: https://developers.openai.com/codex/cli'
       reject(
         new Error(
-          `Failed to start "${bin}": ${e.message}. Install it and ensure it is on PATH. ` +
-            'Claude: https://docs.claude.com/en/docs/claude-code — ' +
-            'Codex: https://developers.openai.com/codex/cli'
+          `Failed to start "${bin}": ${e.message}. Install it and ensure it is on PATH. ${installHint}`
         )
       )
-    )
+    })
     proc.on('close', (code) => {
       // Prefer stdout (the clean final message); fall back to stderr if a CLI
       // emitted its answer there instead.

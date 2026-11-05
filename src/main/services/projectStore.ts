@@ -2,7 +2,7 @@ import { homedir, tmpdir } from 'os'
 import { basename, extname, join, relative, sep } from 'path'
 import { promises as fs } from 'fs'
 import { extractZip } from './zip'
-import { assertWindowsSafeName, normalizeEntryPath, toPosixRelative } from './projectPaths'
+import { assertWindowsSafeName, normalizeProjectEntry, toPosixRelative } from './projectPaths'
 import type {
   ProjectHome,
   ProjectMeta,
@@ -27,10 +27,9 @@ function defaultMeta(settings: Settings): ProjectMeta {
 }
 
 function normalizeProjectMeta(meta: ProjectMeta, fallbackSettings: Settings): ProjectMeta {
-  const entry = typeof meta.entry === 'string' && meta.entry.trim() ? meta.entry : 'main.tex'
   return {
     ...meta,
-    entry: normalizeEntryPath(entry),
+    entry: normalizeProjectEntry(meta.entry),
     settings: normalizeSettings(meta.settings, fallbackSettings)
   }
 }

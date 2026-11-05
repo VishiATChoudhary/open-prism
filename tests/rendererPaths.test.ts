@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isSameOrInside,
   joinDisplayPath,
+  movePath,
   normalizeSeparators,
   relativeToProject
 } from '../src/renderer/lib/paths'
@@ -59,6 +60,46 @@ describe('isSameOrInside', () => {
     expect(isSameOrInside('/proj', '/project/main.tex')).toBe(false)
     expect(isSameOrInside('C:\\proj', 'C:\\proj2\\main.tex')).toBe(false)
     expect(isSameOrInside('C:\\proj', 'D:\\proj\\main.tex')).toBe(false)
+  })
+})
+
+describe('movePath', () => {
+  it('maps an exact Windows match to the new path', () => {
+    expect(movePath('C:\\proj\\main.tex', 'C:\\proj\\main.tex', 'C:\\proj\\intro.tex')).toBe(
+      'C:\\proj\\intro.tex'
+    )
+    expect(movePath('C:/proj/main.tex', 'C:\\proj\\main.tex', 'C:\\proj\\intro.tex')).toBe(
+      'C:\\proj\\intro.tex'
+    )
+  })
+
+  it('rewrites Windows descendants with backslashes', () => {
+    expect(movePath('C:\\proj\\sub\\main.tex', 'C:\\proj', 'D:\\work')).toBe(
+      'D:\\work\\sub\\main.tex'
+    )
+    expect(movePath('C:/proj/sub/main.tex', 'C:\\proj', 'D:\\work')).toBe(
+      'D:\\work\\sub\\main.tex'
+    )
+    expect(movePath('C:\\proj\\sub\\main.tex', 'C:\\proj\\sub\\', 'C:\\proj\\chapters')).toBe(
+      'C:\\proj\\chapters\\main.tex'
+    )
+  })
+
+  it('rewrites POSIX descendants with forward slashes', () => {
+    expect(movePath('/proj/sub/main.tex', '/proj', '/work')).toBe('/work/sub/main.tex')
+    expect(movePath('/proj/sub/main.tex', '/proj/sub', '/proj/chapters')).toBe(
+      '/proj/chapters/main.tex'
+    )
+    expect(movePath('/proj/main.tex', '/proj/main.tex', '/proj/intro.tex')).toBe(
+      '/proj/intro.tex'
+    )
+  })
+
+  it('leaves unrelated paths and sibling prefixes untouched', () => {
+    expect(movePath('C:\\proj2\\main.tex', 'C:\\proj', 'C:\\other')).toBe('C:\\proj2\\main.tex')
+    expect(movePath('/project/main.tex', '/proj', '/other')).toBe('/project/main.tex')
+    expect(movePath('D:\\proj\\main.tex', 'C:\\proj', 'C:\\other')).toBe('D:\\proj\\main.tex')
+    expect(movePath('/proj/main.tex', '/proj2', '/other')).toBe('/proj/main.tex')
   })
 })
 

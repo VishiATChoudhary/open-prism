@@ -25,3 +25,18 @@ export function joinDisplayPath(dir: string, name: string): string {
   const base = dir.replace(/[\\/]+$/, '')
   return base ? `${base}${separator}${name}` : name
 }
+
+/**
+ * Rewrite `path` when `oldPath` is renamed or moved to `newPath`.
+ * Exact matches map to `newPath`; descendants keep their relative suffix and
+ * adopt `newPath`'s native separator. Unrelated paths (including siblings that
+ * merely share a prefix) are returned unchanged.
+ */
+export function movePath(path: string, oldPath: string, newPath: string): string {
+  if (!isSameOrInside(oldPath, path)) return path
+  const target = normalizeSeparators(oldPath)
+  const normalized = normalizeSeparators(path)
+  if (normalized === target) return newPath
+  const suffix = normalized.slice(target.length + 1)
+  return joinDisplayPath(newPath, suffix.replace(/\//g, newPath.includes('\\') ? '\\' : '/'))
+}

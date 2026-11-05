@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Settings, ProjectMeta, ChatMessage, CompileResult, FileNode } from '@shared/types'
+import { joinDisplayPath, isSameOrInside, movePath, normalizeSeparators } from '../lib/paths'
 
 export interface OpenFile {
   /** Absolute path on disk. */
@@ -11,13 +12,11 @@ export interface OpenFile {
 }
 
 function baseName(p: string): string {
-  return p.split('/').filter(Boolean).pop() ?? p
+  return normalizeSeparators(p).split('/').filter(Boolean).pop() ?? p
 }
 
 function movedPath(path: string, oldPath: string, newPath: string): string {
-  if (path === oldPath) return newPath
-  if (path.startsWith(`${oldPath}/`)) return `${newPath}${path.slice(oldPath.length)}`
-  return path
+  return movePath(path, oldPath, newPath)
 }
 
 interface ProjectState {
@@ -132,11 +131,11 @@ export const useProject = create<ProjectState>((set) => ({
     }),
   renameOpen: (oldPath, newPath) =>
     set((st) => ({
-      openFiles: st.openFiles.map((f) =>
-        f.path === oldPath || f.path.startsWith(`${oldPath}/`)
-          ? { ...f, path: movedPath(f.path, oldPath, newPath), name: baseName(movedPath(f.path, oldPath, newPath)) }
-          : f
-      ),
+      openFiles: st.openFiles.map((f) => {
+        if (!isSameOrInside(oldPath, f.path)) return f
+        const next = movedPath(f.path, oldPath, newPath)
+        return { ...f, path: next, name: baseName(next) }
+      }),
       activePath: st.activePath ? movedPath(st.activePath, oldPath, newPath) : st.activePath,
       entryPath: st.entryPath ? movedPath(st.entryPath, oldPath, newPath) : st.entryPath
     })),
@@ -165,7 +164,7 @@ export const useProject = create<ProjectState>((set) => ({
       sourceJump: { id: (st.sourceJump?.id ?? 0) + 1, text }
     })),
   loadProject: (p) => {
-    const entryPath = `${p.dir}/${p.meta.entry}`
+    const entryPath = joinDisplayPath(p.dir, p.meta.entry)
     set({
       dir: p.dir,
       meta: p.meta,
